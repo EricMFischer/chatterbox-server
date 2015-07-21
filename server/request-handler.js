@@ -12,6 +12,17 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+var url = require( "url" );
+var queryString = require( "querystring" );
+var http = require('http');
+var querystring = require('querystring');
+// var utils = require('utils');
+
+// console.logs in your code.
+var messages = {};
+messages.results = [];
+
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -27,8 +38,10 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  var messages = {};
-  messages.results = ['penguin', 'lion', 'African elephant'];
+  // var messages = {};
+  var statusCode;
+  var header;
+  // messages.results = [];
 
   // messages.results = [];
 
@@ -50,50 +63,93 @@ var requestHandler = function(request, response) {
   // };
 
   var statusCode;
-  var headers = defaultCorsHeaders;
+  var headers;// = defaultCorsHeaders;
 
-  if(request.method === 'GET'){
-    // if(request.url === 'classes/messages?order=-createdAt'){
-      // response.end(messages);
-    // }
+  if(request.method === 'GET' && request.url === '/classes/messages?order=-createdAt' || request.url === '/classes/messages' && request.method === 'GET' ){
+    // console.log("GET REQUEST SENT")
+    statusCode = 200;
+    // headers = defaultCorsHeaders;
 
-    console.log("GET REQUEST RECEIVED")
-    // console.log(response); 
-
+    headers = defaultCorsHeaders;
+    headers['Content-Type'] = "text/plain";
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(messages));
   }
-  if(request.method === 'POST')
-    console.log("POST REQUEST RECEIVED")
-  // if(request.method === 'GET')
-    console.log("GET REQUEST RECEIVED")
 
+  else if (request.method === 'POST') {
+    console.log("POST REQUEST RECEIVED");
 
+    var fullBody = '';
+    request.on('data', function(chunk) {
+      fullBody += chunk.toString();
+    }); // fullBody is a stringified version of the objects getting passed into "send" in Chatterbox
+
+    
+    request.on('end', function() {
+      console.log("Fullbody stringified obj ---------->" + fullBody);
+
+      // response.writeHead(201, "OK", {'Content-Type': 'text/html'}); // ???
+      
+
+      var decodedBody = JSON.parse(fullBody); // turning a stringified object back into an object (unstringifies anything)
+      messages.results.push(decodedBody); // pushing obj into message.results array
+
+      statusCode = 201;
+      headers = defaultCorsHeaders;
+      headers['Content-Type'] = "text/plain";
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify(messages));
+
+      // console.log("messages.results[0][0] ----------------> " +messages.results[0][0]);
+      // console.log(decodedBody);
+
+      // output the decoded data to the HTTP response          
+      // response.write('<html><head><title>Post data</title></head><body><pre>');
+      // response.write(utils.inspect(decodedBody));
+      // response.write('</pre></body></html>');
+      // headers = defaultCorsHeaders;
+      // headers['Content-Type'] = "text/plain";
+      // response.writeHead(statusCode, headers);
+      // response.end(JSON.stringify(messages));
+      
+      // response.end(JSON.stringify(messages));
+    });
+
+    // statusCode = 201;
+  } else {
+      statusCode = 404;
+      headers = defaultCorsHeaders;
+      headers['Content-Type'] = "text/plain";
+      response.writeHead(statusCode, headers);
+      response.end();
+    }
 
   console.log("Serving request type " + request.method + " for url " + request.url);
 
-  // The outgoing status.
-  var statusCode = 200;
+  // // The outgoing status.
+  // statusCode = statusCode || 200;
 
-  // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+  // // See the note below about CORS headers.
+  // headers = defaultCorsHeaders;
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+  // // Tell the client we are sending them plain text.
+  // //
+  // // You will need to change this if you are sending something
+  // // other than plain text, like JSON or HTML.
+  // headers['Content-Type'] = "text/plain";
 
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // // .writeHead() writes to the request line and headers of the response,
+  // // which includes the status and all headers.
+  // response.writeHead(statusCode, headers);
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end(JSON.stringify(messages));
+  // // Make sure to always call response.end() - Node may not send
+  // // anything back to the client until you do. The string you pass to
+  // // response.end() will be the body of the response - i.e. what shows
+  // // up in the browser.
+  // //
+  // // Calling .end "flushes" the response's internal buffer, forcing
+  // // node to actually send all the data over to the client.
+  // response.end(JSON.stringify(messages));
 };
 
 exports.reqHelper = requestHandler;
