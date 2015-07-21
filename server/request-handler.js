@@ -12,15 +12,11 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
-var url = require( "url" );
-var queryString = require( "querystring" );
-var http = require('http');
-var querystring = require('querystring');
-// var utils = require('utils');
-
 // console.logs in your code.
 var messages = {};
 messages.results = [];
+var utils = require('util');
+var http = require('http');
 
 
 var requestHandler = function(request, response) {
@@ -39,8 +35,8 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   // var messages = {};
-  var statusCode;
-  var header;
+
+
   // messages.results = [];
 
   // messages.results = [];
@@ -65,57 +61,39 @@ var requestHandler = function(request, response) {
   var statusCode;
   var headers;// = defaultCorsHeaders;
 
-  if(request.method === 'GET' && request.url === '/classes/messages?order=-createdAt' || request.url === '/classes/messages' && request.method === 'GET' ){
-    // console.log("GET REQUEST SENT")
-    statusCode = 200;
-    // headers = defaultCorsHeaders;
-
+  function respond(status) {
     headers = defaultCorsHeaders;
     headers['Content-Type'] = "text/plain";
-    response.writeHead(statusCode, headers);
+    response.writeHead(status, headers);
     response.end(JSON.stringify(messages));
+    respond = null;
   }
 
-  else if (request.method === 'POST') {
-    console.log("POST REQUEST RECEIVED");
-
+  function addListeners() {
     var fullBody = '';
-    request.on('data', function(chunk) {
+    request.on("data", function(chunk) {
       fullBody += chunk.toString();
-    }); // fullBody is a stringified version of the objects getting passed into "send" in Chatterbox
-
-    
-    request.on('end', function() {
-      console.log("Fullbody stringified obj ---------->" + fullBody);
-
-      // response.writeHead(201, "OK", {'Content-Type': 'text/html'}); // ???
-      
-
-      var decodedBody = JSON.parse(fullBody); // turning a stringified object back into an object (unstringifies anything)
-      messages.results.push(decodedBody); // pushing obj into message.results array
-
-      statusCode = 201;
-      headers = defaultCorsHeaders;
-      headers['Content-Type'] = "text/plain";
-      response.writeHead(statusCode, headers);
-      response.end(JSON.stringify(messages));
-
-      // console.log("messages.results[0][0] ----------------> " +messages.results[0][0]);
-      // console.log(decodedBody);
-
-      // output the decoded data to the HTTP response          
-      // response.write('<html><head><title>Post data</title></head><body><pre>');
-      // response.write(utils.inspect(decodedBody));
-      // response.write('</pre></body></html>');
-      // headers = defaultCorsHeaders;
-      // headers['Content-Type'] = "text/plain";
-      // response.writeHead(statusCode, headers);
-      // response.end(JSON.stringify(messages));
-      
-      // response.end(JSON.stringify(messages));
     });
+    request.on("end", function() {
+      var decodedBody = JSON.parse(fullBody); // turning a stringified object back into an object (unstringifies anything)
+      messages.results.push(decodedBody);
+      respond(201);
+    });
+    setTimeout(function() {
+      respond && respond(500);
+    }, 1000);
+    console.log("handlers registered");
+  }
 
-    // statusCode = 201;
+
+  if((request.method === 'GET') && (request.url === '/classes/messages?order=-createdAt' 
+    || request.url === '/classes/messages')) {
+    respond(200);
+
+  } else if (request.method === 'POST') {
+    console.log("POST REQUEST RECEIVED");
+    addListeners();
+
   } else {
       statusCode = 404;
       headers = defaultCorsHeaders;
@@ -125,6 +103,7 @@ var requestHandler = function(request, response) {
     }
 
   console.log("Serving request type " + request.method + " for url " + request.url);
+
 
   // // The outgoing status.
   // statusCode = statusCode || 200;
