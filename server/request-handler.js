@@ -27,6 +27,47 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
+  var messages = {};
+  messages.results = ['penguin', 'lion', 'African elephant'];
+
+  // messages.results = [];
+
+  // switch(request.url) {
+  //   case '/classes/messages?order=-createdAt':
+  //     console.log("[200] " + request.method + " to " + request.url);
+  //     response.writeHead(200, "Not implemented", {'Content-Type': 'text/html'});
+  //     response.end('<html><head><title>501 - Not implemented</title></head><body><h1>Not implemented!</h1></body></html>');
+  //     break;
+  //   case '/classes/submit':
+  //     console.log("[501] " + request.method + " to " + request.url);
+  //     response.writeHead(501, "Not implemented", {'Content-Type': 'text/html'});
+  //     response.end('<html><head><title>501 - Not implemented</title></head><body><h1>Not implemented!</h1></body></html>');
+  //     break;
+  //   default:
+  //     response.writeHead(404, "Not found", {'Content-Type': 'text/html'});
+  //     response.end('<html><head><title>404 - Not found</title></head><body><h1>Not found.</h1></body></html>');
+  //     console.log("[404] " + request.method + " to " + request.url);
+  // };
+
+  var statusCode;
+  var headers = defaultCorsHeaders;
+
+  if(request.method === 'GET'){
+    // if(request.url === 'classes/messages?order=-createdAt'){
+      // response.end(messages);
+    // }
+
+    console.log("GET REQUEST RECEIVED")
+    // console.log(response); 
+
+  }
+  if(request.method === 'POST')
+    console.log("POST REQUEST RECEIVED")
+  // if(request.method === 'GET')
+    console.log("GET REQUEST RECEIVED")
+
+
+
   console.log("Serving request type " + request.method + " for url " + request.url);
 
   // The outgoing status.
@@ -52,7 +93,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end("Hello, World!!!!!!!!!!");
+  response.end(JSON.stringify(messages));
 };
 
 exports.reqHelper = requestHandler;
