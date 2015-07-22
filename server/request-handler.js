@@ -14,9 +14,38 @@ this file and include it in basic-server.js so that it actually works.
 
 // console.logs in your code.
 var messages = {};
-messages.results = [];
-var utils = require('util');
+messages.results = [
+  // // Useful for debugging
+  // {
+  //   text: 'hello world',
+  //   username: 'this is patrick',
+  //   // objectId: objectId
+  // }
+];
+var utils = require('./utils');
 var http = require('http');
+
+// var messages = [];
+
+// var actions = {
+//   'GET': function(request, reponse) {
+
+//   },
+
+//   'POST': function(request, reponse) {
+
+//   },
+
+//   'OPTIONS': function(request, reponse) {
+
+//   }
+
+// };
+
+// exports.requestHandler = function(request, response) {
+
+// }
+
 
 
 var requestHandler = function(request, response) {
@@ -61,11 +90,13 @@ var requestHandler = function(request, response) {
   var statusCode;
   var headers;// = defaultCorsHeaders;
 
-  function respond(status) {
+  function respond(status, data) {
+    status = status || 200;
+    data = data || messages;
     headers = defaultCorsHeaders;
-    headers['Content-Type'] = "text/plain";
+    headers['Content-Type'] = "application/json";
     response.writeHead(status, headers);
-    response.end(JSON.stringify(messages));
+    response.end(JSON.stringify(data));
     respond = null;
   }
 
@@ -85,22 +116,25 @@ var requestHandler = function(request, response) {
     console.log("handlers registered");
   }
 
+  console.log(request.url);
 
-  if((request.method === 'GET') && (request.url === '/classes/messages?order=-createdAt' 
-    || request.url === '/classes/messages')) {
+  if(request.url === '/classes/room')
+    respond(200);
+  else if((request.method === 'GET') && (request.url === '/classes/messages?order=-createdAt' 
+    || request.url === '/classes/messages'
+    || request.url === '/classes/room1')) {
     respond(200);
 
   } else if (request.method === 'POST') {
     console.log("POST REQUEST RECEIVED");
     addListeners();
 
+  } else if (request.method === 'OPTIONS'){
+    respond(200, null);
+
   } else {
-      statusCode = 404;
-      headers = defaultCorsHeaders;
-      headers['Content-Type'] = "text/plain";
-      response.writeHead(statusCode, headers);
-      response.end();
-    }
+      respond(404, "Not Found");
+  }
 
   console.log("Serving request type " + request.method + " for url " + request.url);
 
@@ -131,7 +165,7 @@ var requestHandler = function(request, response) {
   // response.end(JSON.stringify(messages));
 };
 
-exports.reqHelper = requestHandler;
+exports.requestHandler = requestHandler;
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
